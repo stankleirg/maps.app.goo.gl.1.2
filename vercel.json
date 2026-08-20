@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/location.js": {
+      "maxDuration": 10
+    }
+  }
+}

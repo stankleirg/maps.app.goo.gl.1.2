@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bagikan Lokasi</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f7fb;
+      color: #111827;
+    }
+    .card {
+      width: min(100%, 460px);
+      background: #fff;
+      border-radius: 22px;
+      padding: 28px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.08);
+    }
+    .icon {
+      width: 62px;
+      height: 62px;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 18px;
+      border-radius: 50%;
+      background: #eef2ff;
+      font-size: 30px;
+    }
+    h1 {
+      margin: 0 0 10px;
+      text-align: center;
+      font-size: 24px;
+    }
+    p {
+      margin: 0;
+      color: #4b5563;
+      line-height: 1.55;
+    }
+    .consent {
+      margin: 18px 0;
+      padding: 15px;
+      border: 1px solid #e5e7eb;
+      background: #f9fafb;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    button {
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      padding: 14px 18px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      background: #111827;
+      color: #fff;
+    }
+    button:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+    #status {
+      min-height: 22px;
+      margin-top: 14px;
+      text-align: center;
+      font-size: 14px;
+      color: #6b7280;
+    }
+    .small {
+      margin-top: 16px;
+      font-size: 12px;
+      color: #9ca3af;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="icon">📍</div>
+    <h1>Bagikan lokasi untuk membuka peta</h1>
+
+    <p>Halaman ini akan meminta izin lokasi dari browser.</p>
+
+    <button id="shareBtn">Izinkan & bagikan lokasi</button>
+    <div id="status"></div>
+
+    <div class="small">
+      Lokasi tidak dapat diakses sebelum Anda memberi izin melalui browser.
+    </div>
+  </main>
+
+  <script>
+    const btn = document.getElementById('shareBtn');
+    const statusBox = document.getElementById('status');
+
+    btn.addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        statusBox.textContent = 'Browser ini tidak mendukung akses lokasi.';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Meminta lokasi...';
+      statusBox.textContent = '';
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            statusBox.textContent = 'Lokasi ditemukan. Menyimpan...';
+
+            const payload = {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              accuracy: position.coords.accuracy,
+              timestamp: new Date().toISOString()
+            };
+
+            const res = await fetch('/api/location', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || !data.ok) {
+              throw new Error(data.error || 'Gagal menyimpan lokasi.');
+            }
+
+            statusBox.textContent = 'Lokasi tersimpan. Membuka Google Maps...';
+
+            const mapsUrl =
+              'https://www.google.com/maps/search/?api=1&query=' +
+              encodeURIComponent(payload.latitude + ',' + payload.longitude);
+
+            window.location.href = mapsUrl;
+          } catch (err) {
+            btn.disabled = false;
+            btn.textContent = 'Coba lagi';
+            statusBox.textContent =
+              'Gagal menyimpan lokasi: ' + (err.message || 'Unknown error');
+          }
+        },
+        (error) => {
+          btn.disabled = false;
+          btn.textContent = 'Coba lagi';
+
+          const messages = {
+            1: 'Izin lokasi ditolak.',
+            2: 'Lokasi tidak tersedia. Pastikan GPS aktif.',
+            3: 'Permintaan lokasi terlalu lama.'
+          };
+
+          statusBox.textContent =
+            messages[error.code] || 'Tidak dapat mengambil lokasi.';
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 0
+        }
+      );
+    });
+  </script>
+</body>
+</html>
